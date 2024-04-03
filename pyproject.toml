@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "construction-site-monitoring"
+version = "0.1.0"
+description = ""
+authors = ["David Schaupp"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
