@@ -60,7 +60,7 @@ class CredentialHandler():
         """
         try:
             username, password, ip = self.load_credentials()
-            return "rtsp://{}:{}@{}:{}".format(username, password, ip, "554//h264Preview_01_main")
+            return "rtsp://{}:{}@{}:{}".format(username, password, ip, "554//h264Preview_01_sub")
         except Exception as e:
             print(f"Error getting streaming URL: {e}")
             return None
