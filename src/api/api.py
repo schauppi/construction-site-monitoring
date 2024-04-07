@@ -1,6 +1,12 @@
-from src.reolink.CameraController import CameraController
-
+import logging
 from flask import Flask, jsonify, request
+
+from src.reolink.CameraController import CameraController
+from src.logging.logging_config import setup_logging
+
+setup_logging()
+logger = logging.getLogger()
+
 app = Flask(__name__)
 
 camera_controller = CameraController(cams=[1])
