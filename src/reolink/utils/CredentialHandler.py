@@ -1,5 +1,8 @@
+from src.logging.logging_config import setup_logging
+
 import json
 import os
+import logging
 
 class CredentialHandler():
     """
@@ -14,6 +17,8 @@ class CredentialHandler():
         """
         Initialize the CredentialHandler with the path to the credentials file.
         """
+        setup_logging()
+        self.logger = logging.getLogger()
         _base_path = os.path.dirname(__file__)
         _credential_path = os.path.join(_base_path, '..', '..', '..', 'reolink_credentials.json')
         self._credential_path = os.path.normpath(_credential_path)
@@ -30,10 +35,10 @@ class CredentialHandler():
             with open(self._credential_path) as file:
                 credentials = json.load(file)
         except FileNotFoundError:
-            print(f"Credentials file not found: {self._credential_path}")
+            self.logger.error(f"Credentials file not found: {self._credential_path}")
             return None, None, None
         except Exception as e:
-            print(f"Error loading credentials file: {e}")
+            self.logger.error(f"Error loading credentials file: {e}")
             return None, None, None
 
         try:
@@ -42,12 +47,13 @@ class CredentialHandler():
             password = cam_credentials["password"]
             ip = cam_credentials["ip"]
 
+            self.logger.info(f"Loaded credentials for camera {self.cam}")
             return username, password, ip
         except KeyError:
-            print(f"No credentials found for camera {self.cam}")
+            self.logger.error(f"No credentials found for camera {self.cam}")
             return None, None, None
         except Exception as e:
-            print(f"Error loading credentials: {e}")
+            self.logger.error(f"Error loading credentials: {e}")
             return None, None, None
 
     @property
@@ -60,7 +66,8 @@ class CredentialHandler():
         """
         try:
             username, password, ip = self.load_credentials()
+            self.logger.info(f"Getting streaming URL for camera {self.cam}")
             return "rtsp://{}:{}@{}:{}".format(username, password, ip, "554//h264Preview_01_sub")
         except Exception as e:
-            print(f"Error getting streaming URL: {e}")
+            self.logger.error(f"Error getting streaming URL: {e}")
             return None
