@@ -23,7 +23,7 @@ def test_status():
 
 def test_set_interval():
     url = 'http://localhost:5000/set_interval'
-    new_interval = 10  # For example, setting to 10 minutes.
+    new_interval = 10  
     response = requests.post(url, json={'interval': new_interval})
     print(f"Set Interval Response: {response.status_code}, {response.json()}")
     assert response.status_code == 200
