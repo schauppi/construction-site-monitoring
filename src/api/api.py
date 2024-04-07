@@ -36,6 +36,10 @@ def set_interval():
         return jsonify({"status": f"Save interval updated to {new_interval} seconds."})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+@app.route('/images', methods=['GET'])
+def get_images():
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True)

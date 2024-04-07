@@ -11,18 +11,9 @@ class CameraController:
     """
     Class to control the cameras and handle image capturing.
 
-    Methods:
-        camera_capture: Continuously captures images from the cameras.
-        save_image: Saves an image to the file system.
-        start_capture: Starts the image capturing process.
-        stop_capture: Stops the image capturing process.
-        is_capturing: Checks if the image capturing process is running.
-        set_save_interval: Sets the interval between image captures.
+    Updated to allow immediate stopping of the image capturing process.
     """
     def __init__(self, cams: list, initial_interval: int = 300) -> None:
-        """
-        Initialize the CameraController with a list of cameras and an initial capture interval.
-        """
         setup_logging()
         self.logger = logging.getLogger(__name__)
         self.capture_images = False
@@ -30,41 +21,30 @@ class CameraController:
         self.save_path = "/media/david/DAVID"
         self.urls = [CredentialHandler(cam).url for cam in cams]
         self.state_lock = threading.Lock()
-        self.thread = threading.Thread(target=self.camera_capture, daemon=True)
-        self.thread.start()
+        self.stop_event = threading.Event()  
 
     def camera_capture(self) -> None:
         """
-        Continuously captures images from the cameras.
-
-        Returns:
-            None
+        Continuously captures images from the cameras, with immediate stop capability.
         """
-        while True:
-            with self.state_lock:
-                if self.capture_images:
-                    for camera_index, url in enumerate(self.urls):
-                        try:
-                            cap = cv2.VideoCapture(url)
-                            ret, frame = cap.read()
-                            if ret:
-                                self.save_image(camera_index, frame)
-                            cap.release()
-                        except Exception as e:
-                            self.logger.error(f"Error capturing image from camera {camera_index}: {e}")
-                    time.sleep(self.save_interval)  
-            time.sleep(1)
+        while not self.stop_event.is_set():
+            for camera_index, url in enumerate(self.urls):
+                if self.stop_event.is_set():  
+                    break
+                try:
+                    cap = cv2.VideoCapture(url)
+                    ret, frame = cap.read()
+                    if ret:
+                        self.save_image(camera_index, frame)
+                    cap.release()
+                except Exception as e:
+                    self.logger.error(f"Error capturing image from camera {camera_index}: {e}")
+            if not self.stop_event.wait(timeout=self.save_interval):  
+                continue
 
     def save_image(self, camera_index: int, frame) -> None:
         """
-        Saves an image to the file system.
-
-        Args: 
-            camera_index (int): Index of the camera.
-            frame: Image frame to save.
-
-        Returns:
-            None
+        Saves an image to the file system, with error handling.
         """
         try:
             camera_path = os.path.join(self.save_path, f'cam_{camera_index}')
@@ -77,43 +57,48 @@ class CameraController:
             cv2.imwrite(file_path, frame)
             self.logger.info(f"Saved image {filename} for camera {camera_index}")
         except Exception as e:
-            self.logger.error(f"Error saving image from camera {camera_index}: {e}")
+            self.logger.error(f"Error saving image for camera {camera_index}: {e}")
 
     def start_capture(self) -> None:
         """
-        Starts the image capturing process.
+        Starts the image capturing process, with immediate start capability.
         """
         with self.state_lock:
+            if self.capture_images:
+                self.logger.info("Image capturing is already running.")
+                return
             self.capture_images = True
-        self.logger.info("Started image capturing")
+            self.stop_event.clear()  # Ensure the stop event is reset.
+            self.thread = threading.Thread(target=self.camera_capture, daemon=True)
+            self.thread.start()
+            self.logger.info("Camera capture started.")
 
     def stop_capture(self) -> None:
         """
-        Stops the image capturing process.
+        Stops the image capturing process immediately.
         """
         with self.state_lock:
+            if not self.capture_images:
+                self.logger.info("Image capturing is not running.")
+                return
             self.capture_images = False
-        self.logger.info("Stopped image capturing")
+            self.stop_event.set()  # Signal the thread to stop.
+            self.thread.join()  # Wait for the thread to finish.
+            self.logger.info("Camera capture stopped immediately.")
 
     def is_capturing(self) -> bool:
         """
         Checks if the image capturing process is running.
-
-        Returns:
-            bool: True if the image capturing process is running, False otherwise.
         """
         return self.capture_images
 
     def set_save_interval(self, interval: int) -> None:
         """
-        Sets the interval between image captures.
-
-        Args:
-            interval (int): The interval between image captures in seconds.
-
-        Returns:
-            None
+        Sets the interval between image captures, with better validation.
         """
+        if interval < 1:
+            self.logger.error("Invalid save interval. It must be a positive integer.")
+            return
         with self.state_lock:
             self.save_interval = interval
-        self.logger.info(f"Set save interval to {interval} seconds")
+        self.logger.info(f"Set save interval to {interval} seconds.")
