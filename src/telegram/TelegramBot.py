@@ -137,6 +137,6 @@ class Bot:
 
         application.run_polling()
 
-if __name__ == '__main__':
+"""if __name__ == '__main__':
     bot = Bot()
-    bot.run()
+    bot.run()"""
