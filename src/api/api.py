@@ -1,8 +1,9 @@
 import logging
 from flask import Flask, jsonify, request
-import os
+from multiprocessing import Process
 
 from src.reolink.CameraController import CameraController
+from src.telegram.TelegramBot import Bot
 from src.logging.logging_config import setup_logging
 from src.api.utils.get_latest_image import get_latest_image
 from src.api.utils.get_disk_space import get_disk_space
@@ -13,6 +14,8 @@ logger = logging.getLogger()
 app = Flask(__name__)
 
 camera_controller = CameraController(cams=[1])
+
+bot = Bot()
 
 @app.route('/start', methods=['POST'])
 def start_capture():
@@ -74,5 +77,31 @@ def disk_space():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+
+def run_bot():
+
+    logger.info("Running bot")
+    try:
+        bot.run()
+    except Exception as e:
+        logger.error(f"An error occurred while running the bot: {str(e)}")
+
+def run_flask_app():
+
+    try:
+        logger.info("Running Flask app")
+        app.run(debug=True)
+    except Exception as e:
+        logger.error(f"An error occurred while running the Flask app: {str(e)}")
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+
+    try:
+        logger.info("Starting application")
+        bot_process = Process(target=run_bot)
+        bot_process.start()
+        run_flask_app()
+    except Exception as e:
+        logger.error(f"An error occurred while starting the application: {str(e)}")
