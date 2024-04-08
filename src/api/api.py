@@ -16,19 +16,28 @@ camera_controller = CameraController(cams=[1])
 
 @app.route('/start', methods=['POST'])
 def start_capture():
-    camera_controller.start_capture()
-    return jsonify({"status": "Started capturing images."})
+    try:
+        camera_controller.start_capture()
+        return jsonify({"status": "Started capturing images."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/stop', methods=['POST'])
 def stop_capture():
-    camera_controller.stop_capture()
-    return jsonify({"status": "Stopped capturing images."})
+    try:
+        camera_controller.stop_capture()
+        return jsonify({"status": "Stopped capturing images."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/status', methods=['GET'])
 def status():
-    current_status = "Capturing" if camera_controller.is_capturing() else "Not Capturing"
-    current_interval = camera_controller.save_interval
-    return jsonify({"status": current_status, "save_interval": current_interval})
+    try:
+        current_status = "Capturing" if camera_controller.is_capturing() else "Not Capturing"
+        current_interval = camera_controller.save_interval
+        return jsonify({"status": current_status, "save_interval": current_interval})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/set_interval', methods=['POST'])
 def set_interval():
