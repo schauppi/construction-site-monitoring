@@ -67,7 +67,7 @@ class CredentialHandler():
         try:
             username, password, ip = self.load_credentials()
             self.logger.info(f"Getting streaming URL for camera {self.cam}")
-            return "rtsp://{}:{}@{}:{}".format(username, password, ip, "554//h264Preview_01_sub")
+            return "rtsp://{}:{}@{}:{}".format(username, password, ip, "554//h264Preview_01_main")
         except Exception as e:
             self.logger.error(f"Error getting streaming URL: {e}")
             return None
