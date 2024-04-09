@@ -13,7 +13,7 @@ logger = logging.getLogger()
 
 app = Flask(__name__)
 
-camera_controller = CameraController(cams=[1])
+camera_controller = CameraController(cams=[1,2])
 
 bot = Bot()
 
@@ -58,8 +58,9 @@ def get_image():
     try:
         save_path = camera_controller.save_path
         if save_path is not None:
-            latest_image_path = get_latest_image(save_path=str(save_path), cam="/cam_0")
-            return jsonify({"image_path": latest_image_path})
+            latest_image_path_0 = get_latest_image(save_path=str(save_path), cam="/cam_0")
+            latest_image_path_1 = get_latest_image(save_path=str(save_path), cam="/cam_1")
+            return jsonify({"image_path_0": latest_image_path_0, "image_path_1": latest_image_path_1})
         else:
             return jsonify({"error": "Save path is not set"}), 400
     except Exception as e:

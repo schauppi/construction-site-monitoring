@@ -71,7 +71,7 @@ class Bot:
             status_response = response.json()
             status = status_response['status']
             interval = status_response['save_interval']
-            self.logger.info(f"Stop Capture Response: {response.status_code}, {response.json()}")
+            self.logger.info(f"Status Capture Response: {response.status_code}, {response.json()}")
             await context.bot.send_message(chat_id=update.effective_chat.id, text="Capture status: " + status + "\n" + "Capture interval: " + str(interval) + " seconds.")
         except Exception as e:
             self.logger.error(f"An error occurred in start_capture function: {e}")
@@ -92,9 +92,11 @@ class Bot:
         try: 
             url = f"{self.base_route}/get_image"
             response = requests.get(url)
-            latest_image_path = response.json()['image_path']
+            latest_image_path_0 = response.json()['image_path_0']
+            latest_image_path_1 = response.json()['image_path_1']
             self.logger.info(f"Get Image Response: {response.status_code}, {response.json()}")
-            await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(latest_image_path, 'rb'))
+            await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(latest_image_path_0, 'rb'))
+            await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(latest_image_path_1, 'rb'))
         except Exception as e:
             self.logger.error(f"An error occurred in get_image function: {e}")
 
