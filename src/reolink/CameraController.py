@@ -1,5 +1,6 @@
 from src.reolink.utils.CredentialHandler import CredentialHandler
 from src.logging.logging_config import setup_logging
+from src.reolink.utils.DetectionHandler import DetectionHandler
 
 import logging
 import cv2
@@ -21,7 +22,8 @@ class CameraController:
         self.save_path = "/media/david/DAVID"
         self.urls = [CredentialHandler(cam).url for cam in cams]
         self.state_lock = threading.Lock()
-        self.stop_event = threading.Event()  
+        self.stop_event = threading.Event()
+        self.detect = DetectionHandler()
 
     def camera_capture(self) -> None:
         """
@@ -37,6 +39,7 @@ class CameraController:
                     try:
                         cap = cv2.VideoCapture(url)
                         ret, frame = cap.read()
+                        print(self.detect.process_frame(frame))
                         if ret:
                             self.save_image(camera_index, frame)
                         cap.release()
