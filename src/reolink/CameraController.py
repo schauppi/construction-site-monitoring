@@ -27,12 +27,11 @@ class CameraController:
         """
         Continuously captures images from the cameras, adjusting dynamically to changes in the save_interval.
         """
-        last_capture_time = time.time()  # Initialize the last capture time
+        last_capture_time = [time.time()] * len(self.urls)  # Initialize the last capture time for each camera
         while not self.stop_event.is_set():
             for camera_index, url in enumerate(self.urls):
                 current_time = time.time()
-                # Check if the interval has elapsed since the last capture
-                if current_time - last_capture_time >= self.save_interval:
+                if current_time - last_capture_time[camera_index] >= self.save_interval:
                     if self.stop_event.is_set():  
                         break
                     try:
@@ -41,7 +40,7 @@ class CameraController:
                         if ret:
                             self.save_image(camera_index, frame)
                         cap.release()
-                        last_capture_time = current_time  # Update the last capture time
+                        last_capture_time[camera_index] = current_time  # Update the last capture time for the current camera
                     except Exception as e:
                         self.logger.error(f"Error capturing image from camera {camera_index}: {e}")
             time.sleep(1)

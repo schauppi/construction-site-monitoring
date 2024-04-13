@@ -161,3 +161,4 @@ cython_debug/
 
 reolink_credentials.json
 construction_site_monitoring/
+src/detection/files/yolov7-e6.engine
