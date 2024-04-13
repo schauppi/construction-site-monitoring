@@ -21,8 +21,8 @@ class DetectionHandler:
             return boxes
         else:
             return {"error": "Failed to get a valid response from the server."}
-
-    def draw_bounding_boxes(self, frame, boxes, input_size=(640, 640)):
+        
+    def scale_coordinates(self, frame, boxes, input_size=(640, 640)):
         orig_h, orig_w = frame.shape[:2]
         scale_w, scale_h = orig_w / input_size[0], orig_h / input_size[1]
         for box in boxes:
@@ -32,12 +32,16 @@ class DetectionHandler:
             y1 = int(y1 * scale_h)
             x2 = int(x2 * scale_w)
             y2 = int(y2 * scale_h)
-            # Draw rectangle with green line
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        return boxes
 
+    def draw_bounding_boxes(self, frame, boxes,):
+        for box in boxes:
+            x1, y1, x2, y2 = box 
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         return frame
 
     def process_frame(self, frame):
         boxes = self.send_image_for_detection(frame)
+        boxes = self.scale_coordinates(frame, boxes)
         bb_frame = self.draw_bounding_boxes(frame, boxes)
         return bb_frame
