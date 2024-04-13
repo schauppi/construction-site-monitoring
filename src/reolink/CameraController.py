@@ -39,9 +39,9 @@ class CameraController:
                     try:
                         cap = cv2.VideoCapture(url)
                         ret, frame = cap.read()
-                        print(self.detect.process_frame(frame))
+                        bb_frame = self.detect.process_frame(frame)
                         if ret:
-                            self.save_image(camera_index, frame)
+                            self.save_image(camera_index, bb_frame)
                         cap.release()
                         last_capture_time[camera_index] = current_time  # Update the last capture time for the current camera
                     except Exception as e:
