@@ -9,3 +9,5 @@ no - ip:
 sudo systemctl status dnsmasq
 
 cat /var/lib/misc/dnsmasq.leases
+
+commit
