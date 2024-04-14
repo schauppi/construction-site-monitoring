@@ -34,7 +34,7 @@ class DetectionHandler:
             y2 = int(y2 * scale_h)
         return boxes
 
-    def draw_bounding_boxes(self, frame, boxes,):
+    def draw_bounding_boxes(self, frame, boxes):
         for box in boxes:
             x1, y1, x2, y2 = box 
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
