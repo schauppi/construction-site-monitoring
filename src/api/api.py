@@ -13,9 +13,8 @@ logger = logging.getLogger()
 
 app = Flask(__name__)
 
-camera_controller = CameraController(cams=[1,2])
-
 bot = Bot()
+camera_controller = CameraController(cams=[1,2], bot=bot)
 
 @app.route('/start', methods=['POST'])
 def start_capture():
@@ -77,7 +76,22 @@ def disk_space():
             return jsonify({"error": "Save path is not set"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/arm', methods=['POST'])
+def arm_cameras():
+    try:
+        camera_controller.arm_system()
+        return jsonify({"status": "System armed."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route('/disarm', methods=['POST'])
+def disarm_cameras():
+    try:
+        camera_controller.disarm_system()
+        return jsonify({"status": "System disarmed."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 def run_bot():
