@@ -10,4 +10,17 @@ sudo systemctl status dnsmasq
 
 cat /var/lib/misc/dnsmasq.leases
 
-commit
+NTP Server:
+curl -X POST -i 'http://192.168.2.113/cgi-bin/api.cgi?cmd=SetNtp&user=cam2&password=XXX' --data '[
+{
+"cmd":"SetNtp",
+"param":{
+"Ntp":{
+"enable":1,
+"server":"192.168.50.137",
+"port":123,
+"interval":1440
+}
+}
+}
+]'
