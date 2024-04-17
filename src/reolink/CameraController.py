@@ -54,10 +54,12 @@ class CameraController:
         self.detection_thread = threading.Thread(target=self.run_detection, daemon=True)
         self.bot = bot
         self.armed = False 
+        self.frame_buffer = {index: [] for index in range(len(self.urls))}
+        
 
     def camera_capture(self) -> None:
         """
-        Continuously captures images from the camera URLs at the specified interval and places them in a queue for detection.
+        Captures images from the cameras at the specified interval and stores them in a buffer.
 
         Args:
             None
@@ -65,21 +67,45 @@ class CameraController:
         Return:
             None
         """
-        last_capture_time = [time.time()] * len(self.urls)
+        last_capture_time = time.time()
         while not self.stop_event.is_set():
-            for camera_index, url in enumerate(self.urls):
-                if time.time() - last_capture_time[camera_index] >= self.save_interval:
+            current_time = time.time()
+            if current_time - last_capture_time >= self.save_interval:
+                for camera_index, url in enumerate(self.urls):
                     cap = cv2.VideoCapture(url)
                     ret, frame = cap.read()
                     if ret:
-                        self.frame_queue.put((camera_index, frame))
+                        timestamp = time.time()
+                        self.frame_buffer[camera_index].append((timestamp, frame))
                     else:
                         self.logger.error(f"Failed to capture image from camera {camera_index}")
                     cap.release()
-                    last_capture_time[camera_index] = time.time()
-                if self.stop_event.is_set():
-                    break
-            time.sleep(1)
+                if len(min(self.frame_buffer.values(), key=len)) > 0:  
+                    self.align_and_process_frames()
+                last_capture_time = current_time
+            time.sleep(0.1)  
+
+    def align_and_process_frames(self):
+        """
+        Aligns frames from the buffer and processes them for detection.
+
+        Args:
+            None
+
+        Return:
+            None
+        """
+        try:
+            min_time = min([frames[0][0] for frames in self.frame_buffer.values() if frames])
+            aligned_frames = []
+            for index in self.frame_buffer:
+                closest_frame = min(self.frame_buffer[index], key=lambda x: abs(x[0] - min_time))
+                aligned_frames.append((index, closest_frame[1]))
+                self.frame_buffer[index].clear()
+            for camera_index, frame in aligned_frames:
+                self.frame_queue.put((camera_index, frame))
+        except Exception as e:
+            self.logger.error(f"Error aligning and processing frames: {e}")
 
     def run_detection(self) -> None:
         """
