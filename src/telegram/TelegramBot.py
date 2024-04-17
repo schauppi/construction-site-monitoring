@@ -12,7 +12,6 @@ import cv2
 
 from src.logging.logging_config import setup_logging
 
-
 class Bot:
     """
     Bot class for controlling the Telegram bot.
