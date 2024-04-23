@@ -36,38 +36,42 @@ def with_cuda_context(func):
 @app.route('/detect', methods=['POST'])
 @with_cuda_context
 def detect():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
-    
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({"error": "No image selected"}), 400
+    try:
+        if 'image' not in request.files:
+            return jsonify({"error": "No image provided"}), 400
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        temp_path = os.path.join(tempfile.gettempdir(), filename)
-        file.save(temp_path)
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({"error": "No image selected"}), 400
 
-        # Read the image using OpenCV
-        image = cv2.imread(temp_path)
-        if image is None:
-            return jsonify({"error": "Invalid image format"}), 422
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            temp_path = os.path.join(tempfile.gettempdir(), filename)
+            file.save(temp_path)
 
-        # Ensure the image is in the right format and size for YoLov7
-        image = cv2.resize(image, (640, 640))  # Adjust the size as per your model's input
+            image = cv2.imread(temp_path)
+            if image is None:
+                return jsonify({"error": "Invalid image format"}), 422
 
-        # Perform object detection
-        result_image, inference_time, num_objects, result_boxes = yolov7.infer(image)
+            image = cv2.resize(image, (640, 640)) 
 
-        # Save or process the result_image as needed, here we will just return the number of objects
-        return jsonify({
-            "num_objects": num_objects,
-            "inference_time": inference_time,
-            "result_boxes": result_boxes.tolist() if result_boxes.size else []
-        })
+            _, inference_time, num_objects, result_boxes = yolov7.infer(image)
+
+            return jsonify({
+                "num_objects": num_objects,
+                "inference_time": inference_time,
+                "result_boxes": result_boxes.tolist() if result_boxes.size else []
+            })
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        return jsonify({"error": "An error occurred while processing the image"}), 500
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+    try:
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        return False
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
