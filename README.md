@@ -8,6 +8,8 @@ no - ip:
 
 sudo systemctl status dnsmasq
 
+sudo systemctl restart dnsmasq
+
 cat /var/lib/misc/dnsmasq.leases
 
 NTP Server:
