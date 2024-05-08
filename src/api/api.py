@@ -16,6 +16,14 @@ app = Flask(__name__)
 bot = Bot()
 camera_controller = CameraController(cams=[1,2], bot=bot)
 
+@app.before_request
+def initialize_capture():
+    try:
+        camera_controller.start_capture()
+        logger.info("Started capturing images automatically.")
+    except Exception as e:
+        logger.error(f"Failed to start image capture automatically: {str(e)}")
+
 @app.route('/start', methods=['POST'])
 def start_capture():
     try:
