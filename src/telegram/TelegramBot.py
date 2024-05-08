@@ -42,6 +42,7 @@ class Bot:
 
         self.telegram_bot = TelegramBot(token=self.token)
         self.loop = asyncio.new_event_loop()
+        
         self.thread = threading.Thread(target=self.start_asyncio_loop, daemon=True)
         self.thread.start()
 
@@ -86,6 +87,7 @@ class Bot:
             help_text += "/myid - Getting your chat ID\n"
             help_text += "/arm - Arming the cameras\n"
             help_text += "/disarm - Disarming the cameras\n"
+            help_text += "/restart_dnsmasq - Restarting the dnsmasq service\n"
             await context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
         except Exception as e:
             self.logger.error(f"An error occurred in help_command function: {e}")
@@ -333,6 +335,25 @@ class Bot:
         except Exception as e:
             self.logger.error(f"An error occurred in disarm function: {e}")
 
+    async def restart_dnsmasq(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        Asynchronously restarts the dnsmasq service via the Flask API.
+
+        Args:
+            update: The update object.
+            context: The context object.
+
+        Returns:
+            None
+        """
+        try:
+            url = f"{self.base_route}/restart-dnsmasq"
+            response = requests.post(url)
+            self.logger.info(f"Restart Dnsmasq Response: {response.status_code}, {response.json()}")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="Dnsmasq restarted.")
+        except Exception as e:
+            self.logger.error(f"An error occurred in restart_dnsmasq function: {e}")
+
 
     def run(self) -> None:
         """
@@ -357,7 +378,7 @@ class Bot:
         application.add_handler(CommandHandler('myid', self.my_id))
         application.add_handler(CommandHandler('arm', self.arm))
         application.add_handler(CommandHandler('disarm', self.disarm))
-
+        application.add_handler(CommandHandler('restart_dnsmasq', self.restart_dnsmasq))
 
         echo_handler = MessageHandler(
             filters.TEXT & ~filters.COMMAND, self.echo)
@@ -366,3 +387,6 @@ class Bot:
         application.add_handler(echo_handler)
 
         application.run_polling()
+
+
+

@@ -1,6 +1,7 @@
 import logging
 from flask import Flask, jsonify, request
 from multiprocessing import Process
+import subprocess
 
 from src.reolink.CameraController import CameraController
 from src.telegram.TelegramBot import Bot
@@ -92,6 +93,21 @@ def disarm_cameras():
         return jsonify({"status": "System disarmed."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/restart-dnsmasq', methods=['POST'])
+def restart_dnsmasq():
+    try:
+        # Command array to prevent shell injection
+        command = ["sudo", "systemctl", "restart", "dnsmasq"]
+        # Execute the command without using shell
+        subprocess.run(command, check=True)
+        return jsonify({"status": "success", "message": "Dnsmasq restarted successfully."})
+    except subprocess.CalledProcessError as e:
+        # If the command fails
+        return jsonify({"status": "error", "message": str(e)}), 500
+    except Exception as e:
+        # For other exceptions
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 def run_bot():

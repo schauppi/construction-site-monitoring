@@ -43,7 +43,7 @@ class CameraController:
         """
         setup_logging()
         self.logger = logging.getLogger()
-        self.capture_images = False
+        self.capture_images = True
         self.save_interval = initial_interval
         self.save_path = "/media/david/DAVID"
         self.urls = [CredentialHandler(cam).url for cam in cams]
