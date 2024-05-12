@@ -84,6 +84,7 @@ python -m src.detection.detection_api
     * **/disk_space:** Check disk space usage.
     * **/arm:** Arm the system.
     * **/disarm:** Disarm the system.
+    * **/get_current_images:** Get the latest images.
 
 * **Object Detection API on Jetson Xavier**
     * **/detect:** Endpoint to upload images for object detection.

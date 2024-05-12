@@ -292,3 +292,30 @@ class CameraController:
         with self.state_lock:
             self.save_interval = interval
         self.logger.info(f"Set save interval to {interval} seconds.")
+
+    def get_current_frames(self):
+        """
+        Captures a current image from all cameras.
+
+        Args:
+            None
+
+        Returns:
+            frames (dict): A dictionary where the keys are camera indices and the values are the current image frames or None if capturing fails.
+        """
+        frames = {}
+        for camera_index, url in enumerate(self.urls):
+            try:
+                cap_current = cv2.VideoCapture(url)
+                ret, frame = cap_current.read()
+                cap_current.release()
+                if ret:
+                    frames[camera_index] = frame
+                else:
+                    self.logger.error(f"Failed to capture current image from camera {camera_index}")
+                    frames[camera_index] = None
+            except Exception as e:
+                self.logger.error(f"Error capturing image from camera {camera_index}: {e}")
+                frames[camera_index] = None
+        return frames
+

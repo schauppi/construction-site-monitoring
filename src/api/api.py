@@ -7,6 +7,11 @@ from src.telegram.TelegramBot import Bot
 from src.logging.logging_config import setup_logging
 from src.api.utils.get_latest_image import get_latest_image
 from src.api.utils.get_disk_space import get_disk_space
+import tempfile
+import cv2
+from datetime import datetime, timedelta
+import os
+import imageio.v2 as imageio
 
 setup_logging()
 logger = logging.getLogger()
@@ -18,11 +23,13 @@ camera_controller = CameraController(cams=[1,2], bot=bot)
 
 @app.before_request
 def initialize_capture():
-    try:
-        camera_controller.start_capture()
-        logger.info("Started capturing images automatically.")
-    except Exception as e:
-        logger.error(f"Failed to start image capture automatically: {str(e)}")
+    if not camera_controller.is_capturing():
+        try:
+            camera_controller.start_capture()
+            logger.info("Started capturing images automatically.")
+        except Exception as e:
+            logger.error(f"Failed to start image capture automatically: {str(e)}")
+
 
 @app.route('/start', methods=['POST'])
 def start_capture():
@@ -70,6 +77,21 @@ def get_image():
             return jsonify({"image_path_0": latest_image_path_0, "image_path_1": latest_image_path_1})
         else:
             return jsonify({"error": "Save path is not set"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/get_current_images', methods=['GET'])
+def get_all_images():
+    try:
+        frames = camera_controller.get_current_frames()
+        image_paths = {}
+        for camera_index, frame in frames.items():
+            if frame is not None:
+                temp_file = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                temp_file_path = temp_file.name
+                cv2.imwrite(temp_file_path, frame)
+                image_paths[camera_index] = temp_file_path
+        return jsonify({"image_paths": image_paths})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
