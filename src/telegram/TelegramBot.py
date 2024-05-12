@@ -86,6 +86,7 @@ class Bot:
             help_text += "/myid - Getting your chat ID\n"
             help_text += "/arm - Arming the cameras\n"
             help_text += "/disarm - Disarming the cameras\n"
+            help_text += "/get_current_image - Getting the current images from all cameras\n"
             await context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
         except Exception as e:
             self.logger.error(f"An error occurred in help_command function: {e}")
@@ -333,6 +334,34 @@ class Bot:
         except Exception as e:
             self.logger.error(f"An error occurred in disarm function: {e}")
 
+    async def get_current_image(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        Sends the current images from all cameras to the user.
+
+        Args:
+            update: The update object.
+            context: The context object.
+
+        Returns:
+            None
+        """
+        try:
+            url = f"{self.base_route}/get_current_images"
+            response = requests.get(url)
+            image_paths = response.json()['image_paths']
+            if response.status_code == 200:
+                for camera_index, frame_path in image_paths.items():
+                    if frame_path is not None:
+                        await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(frame_path, 'rb'))
+                        os.remove(frame_path)
+                    else:
+                        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Failed to capture image from camera {camera_index}.")
+            else:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text="Failed to capture images.")
+        except Exception as e:
+            self.logger.error(f"An error occurred in get_all_images function: {e}")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="Error fetching the images.")
+
 
     def run(self) -> None:
         """
@@ -357,6 +386,8 @@ class Bot:
         application.add_handler(CommandHandler('myid', self.my_id))
         application.add_handler(CommandHandler('arm', self.arm))
         application.add_handler(CommandHandler('disarm', self.disarm))
+        application.add_handler(CommandHandler('get_current_image', self.get_current_image))
+
 
 
         echo_handler = MessageHandler(
